@@ -92,7 +92,7 @@ public class Console {
         String time = jsonObj.getString("time");
         String size = jsonObj.getString("size");
 
-        if(msg.equals("success")) {
+        if(Integer.valueOf(code) == 0) {
             // 获取字符串对象中的result数组
             JSONArray jsonArray = jsonObj.getJSONArray("result");
             if (null != jsonArray && jsonArray.size() > 0) {
@@ -101,7 +101,8 @@ public class Console {
                 // 得到表头
                 ArrayList<String> headerList = new ArrayList<String>();
                 Map<String, Object> obj1 = mapListJson.get(0);
-                // 需要优化
+
+                // TODO: 需要优化
                 for (Map.Entry<String, Object> entry : obj1.entrySet()) {
                     String strkey1 = entry.getKey();    // 表头
                     headerList.add(strkey1);
@@ -133,7 +134,7 @@ public class Console {
                 /* Print table */
                 tt.printTable();
                 System.out.println();
-                System.out.println("SQL Execute Time: " + time + "  HDFS R&W Size: " + size);
+                System.out.println("SQL Execution Time: " + time + "  HDFS R&W Size: " + size);
             }
         }
         else{

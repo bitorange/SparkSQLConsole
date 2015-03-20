@@ -46,8 +46,8 @@ public class NetworkInterface {
             lines=e.getMessage();
         } catch (ConnectException e) {
             // 连接到服务器出错
-            lines=e.getMessage();
-            lines="连接到服务器出错";
+            // lines = e.getMessage();
+            lines = "连接到服务器出错";
         } catch (IOException e) {
             lines=e.getMessage();
         }catch (Exception e) {
