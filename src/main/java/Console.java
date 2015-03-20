@@ -47,15 +47,16 @@ public class Console {
                     System.out.print("SQL> ");
                     while (!(lines = sc.nextLine()).equals("quit"))//如果不输入quit则一直输入
                     {
-                        try {
-                            String json = net.execute(URLEncoder.encode(lines, "utf-8"));
-                            /* json 数据解析并打印 */
-                            Console console = new Console();
-                            console.jsonparser(json);
-                        }catch (Exception e)
-                        {
-                            System.out.println(e.getMessage());
+                        if(lines.isEmpty()) {
+                            System.out.print("SQL> ");
+                            continue;
                         }
+                        String json = net.execute(URLEncoder.encode(lines, "utf-8"));
+                        System.out.println(json);
+                        /* json 数据解析并打印 */
+                        Console console = new Console();
+                        console.jsonparser(json);
+
                         System.out.print("SQL> ");
                     }
                     break;
@@ -80,17 +81,24 @@ public class Console {
      * 将获得的json数据进行解析，并显示在界面上
      *
      * @param     json  json字符串
-     * @exception Exception
-     * If the named encoding is not supported
      */
     private void jsonparser(String json){
-        // 获取整个json字符串对象
-        JSONObject jsonObj = JSONObject.fromObject(json);
+        String code,msg,time,size;
+        JSONObject jsonObj;
+        try {
+            // 获取整个json字符串对象
+            jsonObj = JSONObject.fromObject(json);
 
-        String code = jsonObj.getString("code");
-        String msg = jsonObj.getString("msg");
-        String time = jsonObj.getString("time");
-        String size = jsonObj.getString("size");
+            code = jsonObj.getString("code");
+            msg = jsonObj.getString("msg");
+            time = jsonObj.getString("time");
+            size = jsonObj.getString("size");
+
+        }catch (Exception e)
+        {
+            System.out.println("json数据解析出错");
+            return;
+        }
 
         if(Integer.valueOf(code) == 0) {
             // 获取字符串对象中的result数组
