@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -42,15 +43,17 @@ public class NetworkInterface {
 
 
         } catch (MalformedURLException e) {
-
-            e.printStackTrace();
             lines=e.getMessage();
-
+        } catch (ConnectException e) {
+            // 连接到服务器出错
+            lines=e.getMessage();
+            lines="连接到服务器出错";
         } catch (IOException e) {
-
-            e.printStackTrace();
+            lines=e.getMessage();
+        }catch (Exception e) {
             lines=e.getMessage();
         }
+
         return lines;
     }
 
