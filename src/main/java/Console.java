@@ -52,7 +52,6 @@ public class Console {
                             continue;
                         }
                         String json = net.execute(URLEncoder.encode(lines, "utf-8"));
-                        System.out.println(json);
                         /* json 数据解析并打印 */
                         Console console = new Console();
                         console.jsonparser(json);
