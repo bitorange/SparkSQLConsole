@@ -14,21 +14,23 @@ public class Console {
     public static void main(String[] args) {
         while (true) {
             try {
-                // IDE中输入与输出
+                // IDE 中输入与输出
                 Scanner sc = new Scanner(System.in);
-                System.out.print("Please input your name: ");
+                System.out.print("Enter Username: ");
                 String name = sc.nextLine();
-                System.out.print("Please input your password: ");
+                System.out.print("Enter Password: ");
                 String password = sc.nextLine();
 
-               // 控制台中输入与输出
-//              java.io.Console cons = System.console();
-//              String name=null,password=null;
-//              if (cons != null)
-//              {              // 判断是否有控制台的使用权
-//                  name = new String(cons.readLine("Please input your name: "));      // 读取整行字符
-//                  password = new String(cons.readPassword("Please input your password: "));   // 读取密码,输入时不显示
-//              }
+                // 控制台中输入与输出
+                /*
+                java.io.Console cons = System.console();
+                String name=null,password=null;
+                if (cons != null)
+                {              // 判断是否有控制台的使用权
+                    name = new String(cons.readLine("Please input your name: "));      // 读取整行字符
+                    password = new String(cons.readPassword("Please input your password: "));   // 读取密码,输入时不显示
+                }
+                */
 
                 // 连接服务器验证用户名与密码
                 NetworkInterface net = new NetworkInterface();
@@ -40,7 +42,7 @@ public class Console {
                 if (state.equals("ok"))
                 // 用户名，密码正确
                 {
-                    System.out.println("登录成功");
+                    System.out.println("Login Success");
 
                     // 继续输入sql语句等
                     String lines;
@@ -51,8 +53,11 @@ public class Console {
                             System.out.print("SQL> ");
                             continue;
                         }
+                        if (lines.lastIndexOf(';') == lines.length() - 1) {
+                            lines = lines.substring(0, lines.length()-1);
+                        }
                         String json = net.execute(URLEncoder.encode(lines, "utf-8"));
-                        System.out.println(json);
+                        // System.out.println(json);
                         /* json 数据解析并打印 */
                         Console console = new Console();
                         console.jsonparser(json);
@@ -63,12 +68,12 @@ public class Console {
                 } else if (state.equals("no"))
                 // 用户名，密码不正确
                 {
-                    System.out.println("用户名与密码不匹配，请再次输入");
+                    System.out.println("Wrong Username, Password or Account Number. Please try again");
                     // 再次输入用户名密码
                 }
                 else {
                     // 出现问题（如传输过程等问题）
-                    System.out.println(state);
+                    System.out.println("Error: 连接远程服务器失败");
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
@@ -93,10 +98,9 @@ public class Console {
             msg = jsonObj.getString("msg");
             time = jsonObj.getString("time");
             size = jsonObj.getString("size");
-
         }catch (Exception e)
         {
-            System.out.println("json数据解析出错");
+            System.out.println("Error: JSON 数据解析出错");
             return;
         }
 
@@ -134,10 +138,9 @@ public class Console {
 
                 /* 生成TextTable */
                 TextTable tt = new TextTable(header, data);
-                // this adds the numbering on the left
+
+                // Add the numbering on the left
                 tt.setAddRowNumbering(true);
-                // sort by the first column
-                // tt.setSort(0);
 
                 /* Print table */
                 tt.printTable();
@@ -146,7 +149,7 @@ public class Console {
             }
         }
         else{
-            System.out.println(msg);
+            System.out.println("Error: " + msg);
         }
     }
 }
