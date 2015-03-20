@@ -23,9 +23,9 @@ public class Console {
             try {
                 // IDE中输入与输出
                 Scanner sc = new Scanner(System.in);
-                System.out.print("Please input your name:");
+                System.out.print("Please input your name: ");
                 String name = sc.nextLine();
-                System.out.print("Please input your password:");
+                System.out.print("Please input your password: ");
                 String password = sc.nextLine();
 
                //控制台中输入与输出
@@ -38,30 +38,30 @@ public class Console {
 //              }
                 //连接服务器验证用户名与密码
                 NetworkInterface net = new NetworkInterface();
+
                 //对字符串进行utf-8编码
                 String geturl = "check?name=" + URLEncoder.encode(name, "utf-8") + "&password=" + password;
-
                 String state = net.execute(geturl);
-
                 ArrayList<String> commandList=new ArrayList<String>();
+
                 if (state.equals("ok"))//用户名，密码正确
                 {
                     System.out.println("登录成功");
 
                     //继续输入sql语句等
-                   // System.out.print("SQL> ");
+                    // System.out.print("SQL> ");
                     String lines = null;
                     System.out.print("SQL> ");
                     while (!(lines = sc.nextLine()).equals("quit"))//如果不输入quit则一直输入
                     {
-                      //  if(lines.equals())
+                        // if(lines.equals())
                         commandList.add(lines);
                         try {
 
                             String json = net.execute(URLEncoder.encode(lines, "utf-8"));
 
-                          //  System.out.println(json);
-                            /*json数据解析并打印*/
+                            //  System.out.println(json);
+                            /* json 数据解析并打印 */
                             Console console = new Console();
                             console.jsonparser(json);
                         }catch (Exception e)
@@ -72,9 +72,9 @@ public class Console {
                         System.out.print("SQL> ");
 
 
-                        int position=commandList.size()-1;   //上一个String字符位置
+                        int position = commandList.size()-1;   //上一个String字符位置
 
-                        //监听键盘事件
+                        // TODO: 监听键盘事件
 
                     }
                     break;
@@ -82,11 +82,11 @@ public class Console {
                 {
                     System.out.println("用户名与密码不匹配，请再次输入");
                     // System.out.println(state);
-                    //再次输入用户名密码
+                    // 再次输入用户名密码
                     continue;
                 } else {//出现问题（如传输过程等问题）
                     System.out.println(state);
-                    //再次输入用户名密码
+                    // 再次输入用户名密码
                     continue;
                 }
             } catch (Exception e) {
@@ -114,7 +114,7 @@ public class Console {
         String time = jsonObj.getString("time");
         String size = jsonObj.getString("size");
 
-      // System.out.println(code+"  "+msg+"  "+time+"  "+size);
+        // System.out.println(code+"  "+msg+"  "+time+"  "+size);
 
 
         if(msg.equals("success")) {
@@ -150,7 +150,7 @@ public class Console {
                 // 生成TextTable
                 TextTable tt = new TextTable(header, data);
                 // this adds the numbering on the left
-               // tt.setAddRowNumbering(true);
+                // tt.setAddRowNumbering(true);
                 // sort by the first column
                 //tt.setSort(0);
                 tt.printTable();
