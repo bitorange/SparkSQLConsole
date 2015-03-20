@@ -1,13 +1,9 @@
 /**
  * Created by orange on 2015/3/16.
  */
-
-
 import dnl.utils.text.table.TextTable;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,8 +80,7 @@ public class Console {
      * 将获得的json数据进行解析，并显示在界面上
      *
      * @param     json  json字符串
-     * @return    void
-     * @exception UnsupportedEncodingException
+     * @exception Exception
      * If the named encoding is not supported
      */
     private void jsonparser(String json){
