@@ -37,7 +37,21 @@ public class Console {
 
                 // 对字符串进行utf-8编码为url格式
                 String geturl = "check?name=" + URLEncoder.encode(name, "utf-8") + "&password=" + password;
-                String state = net.execute(geturl);
+
+                String state = null;
+                String myJsonResponse=null;
+                try{
+
+                    myJsonResponse = net.execute(geturl);
+
+                    //jsonResponse解析，获取状态信息
+                    JSONObject jsonObject = JSONObject.fromObject(myJsonResponse);
+                    state=jsonObject.getString("msg");
+                }
+                catch  (Exception e) {
+                    System.out.println(e.getMessage());
+                    continue;
+                }
 
                 if (state.equals("ok"))
                 // 用户名，密码正确
@@ -88,6 +102,7 @@ public class Console {
      * @param     json  json字符串
      */
     private void jsonparser(String json){
+        System.out.println(json);
         String code,msg,time,size;
         JSONObject jsonObj;
         try {

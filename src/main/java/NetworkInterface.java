@@ -12,6 +12,7 @@ import java.net.URL;
  */
 public class NetworkInterface {
     private static final String targetURL = "http://localhost:8080/SparkSQLServer/service/";
+//    private static final String targetURL = "http://localhost:8080/MyServer/service/";
 //    HttpURLConnection httpConnection;
 
     public String execute(String geturl) {
