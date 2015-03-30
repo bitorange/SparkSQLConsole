@@ -1,11 +1,16 @@
 package org.linc.spark.SparkSQLConsole;
 
 /**
- * Created by orange on 2015/3/16.
+ * Created by orange on 2015/3/30.
  */
+
+import com.sun.jersey.api.client.Client;
+        import com.sun.jersey.api.client.ClientResponse;
+        import com.sun.jersey.api.client.WebResource;
 import dnl.utils.text.table.TextTable;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +18,11 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class Console {
+
+    private static final String targetURL = "http://localhost:8080/SparkSQLServer/service/";
+
     public static void main(String[] args) {
+        Client client=null;
         while (true) {
             try {
                 // IDE 中输入与输出
@@ -23,8 +32,7 @@ public class Console {
                 System.out.print("密码: ");
                 String password = sc.nextLine();
 
-                // 连接服务器验证用户名与密码
-                NetworkInterface net = new NetworkInterface();
+
 
                 // 对字符串进行 utf-8 编码为 url 格式
                 String getURL = "check?name=" + URLEncoder.encode(name, "utf-8") + "&password=" + password;
@@ -33,9 +41,24 @@ public class Console {
                 String state;
                 String myJsonResponse;
                 try{
-                    myJsonResponse = net.execute(getURL);
-                }
-                catch  (Exception e) {
+                    if(client==null) {
+                        client = Client.create();
+                    }
+
+                    // 连接服务器验证用户名与密码
+                    WebResource webResource = client
+                            .resource(targetURL+getURL);
+
+                    ClientResponse response = webResource.accept("application/json")
+                            .get(ClientResponse.class);
+
+                    if (response.getStatus() != 200) {
+                        throw new RuntimeException("Failed : HTTP error code : "
+                                + response.getStatus());
+                    }
+
+                    myJsonResponse = response.getEntity(String.class);
+                } catch  (Exception e) {
                     System.out.println("Err: 连接远程服务器的过程中发生错误，错误原因：" + e.getMessage());
                     continue;
                 }
@@ -78,12 +101,28 @@ public class Console {
                             continue;
                         }
 
-                        // 执行 SQL 语句，获得结果
-                        String json = net.execute(URLEncoder.encode(lines, "utf-8"));
+                        try {
+                            // 执行 SQL 语句，获得结果
+                            WebResource webResource = client
+                                    .resource(targetURL);
 
-                        // JSON 数据解析并打印
-                        Console console = new Console();
-                        console.jsonParser(json);
+                            ClientResponse response = webResource.accept("application/json")
+                                    .post(ClientResponse.class,lines);
+
+                            if (response.getStatus() != 200) {
+                                throw new RuntimeException("Failed : HTTP error code : "
+                                        + response.getStatus());
+                            }
+
+                            String json = response.getEntity(String.class);
+
+                            // JSON 数据解析并打印
+                            Console consoletest = new Console();
+                            consoletest.jsonParser(json);
+                        }catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
 
                         System.out.print("SQL> ");
                     }
@@ -185,4 +224,5 @@ public class Console {
             System.out.println("Error: " + msg);
         }
     }
+
 }
