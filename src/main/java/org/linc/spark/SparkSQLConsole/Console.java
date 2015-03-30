@@ -5,8 +5,8 @@ package org.linc.spark.SparkSQLConsole;
  */
 
 import com.sun.jersey.api.client.Client;
-        import com.sun.jersey.api.client.ClientResponse;
-        import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import dnl.utils.text.table.TextTable;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -31,8 +31,6 @@ public class Console {
                 String name = sc.nextLine();
                 System.out.print("密码: ");
                 String password = sc.nextLine();
-
-
 
                 // 对字符串进行 utf-8 编码为 url 格式
                 String getURL = "check?name=" + URLEncoder.encode(name, "utf-8") + "&password=" + password;
@@ -166,12 +164,10 @@ public class Console {
 
         // 解析 JSON 数据
         try {
-            // 获取整个json字符串对象
+            // 获取code对象
             jsonObj = JSONObject.fromObject(json);
             code = jsonObj.getString("code");
-            msg = jsonObj.getString("msg");
-            time = jsonObj.getString("time");
-            size = jsonObj.getString("size");
+
         }catch (Exception e)
         {
             System.out.println("Error: JSON 数据解析出错，服务器端未传回指定格式数据");
@@ -179,7 +175,10 @@ public class Console {
         }
 
         // 检查错误代码
-        if(Integer.valueOf(code) == 0) {
+        if(Integer.valueOf(code) == 0) {// 如果无错误
+            time = jsonObj.getString("time");
+            size = jsonObj.getString("size");
+
             // 获取字符串对象中的 result 数据
             JSONArray jsonArray = jsonObj.getJSONArray("result");
             if (null != jsonArray && jsonArray.size() > 0) {
@@ -224,6 +223,7 @@ public class Console {
             }
         }
         else{
+            msg = jsonObj.getString("msg");
             System.out.println("Error: " + msg);
         }
     }
