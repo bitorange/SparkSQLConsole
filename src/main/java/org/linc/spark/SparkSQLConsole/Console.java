@@ -103,11 +103,14 @@ public class Console {
 
                         try {
                             // 执行 SQL 语句，获得结果
+
+                            lines =URLEncoder.encode(lines,"utf-8");
+                            lines="sqlExecute?sql="+lines;
                             WebResource webResource = client
-                                    .resource(targetURL);
+                                    .resource(targetURL+lines);
 
                             ClientResponse response = webResource.accept("application/json")
-                                    .post(ClientResponse.class,lines);
+                                    .get(ClientResponse.class);
 
                             if (response.getStatus() != 200) {
                                 throw new RuntimeException("Failed : HTTP error code : "
@@ -117,8 +120,8 @@ public class Console {
                             String json = response.getEntity(String.class);
 
                             // JSON 数据解析并打印
-                            Console consoletest = new Console();
-                            consoletest.jsonParser(json);
+                            Console myConsole = new Console();
+                            myConsole.jsonParser(json);
                         }catch (Exception e)
                         {
                             e.printStackTrace();
