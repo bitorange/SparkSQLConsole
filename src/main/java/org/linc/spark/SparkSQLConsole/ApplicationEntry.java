@@ -17,15 +17,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-public class Console {
+/**
+ * 程序入口
+ */
+public class ApplicationEntry {
 
-    private static final String targetURL = "http://localhost:8080/SparkSQLServer/service/";
+    private static String targetURL = "http://localhost:8080/SparkSQLServer/service/";
 
     public static void main(String[] args) {
-        Client client=null;
+        // 获取资源地址
+        if (args.length > 0) {
+            ApplicationEntry.targetURL = args[0];
+        }
+
+        Client client = null;
         while (true) {
             try {
-                // IDE 中输入与输出
+                // 用户名与密码
                 Scanner sc = new Scanner(System.in);
                 System.out.print("用户名: ");
                 String name = sc.nextLine();
@@ -38,14 +46,14 @@ public class Console {
                 // 连接到远程服务器
                 String state;
                 String myJsonResponse;
-                try{
-                    if(client==null) {
+                try {
+                    if (client == null) {
                         client = Client.create();
                     }
 
                     // 连接服务器验证用户名与密码
                     WebResource webResource = client
-                            .resource(targetURL+getURL);
+                            .resource(targetURL + getURL);
 
                     ClientResponse response = webResource.accept("application/json")
                             .get(ClientResponse.class);
@@ -56,7 +64,7 @@ public class Console {
                     }
 
                     myJsonResponse = response.getEntity(String.class);
-                } catch  (Exception e) {
+                } catch (Exception e) {
                     System.out.println("Err: 连接远程服务器的过程中发生错误，错误原因：" + e.getMessage());
                     continue;
                 }
@@ -65,8 +73,7 @@ public class Console {
                 try {
                     JSONObject jsonObject = JSONObject.fromObject(myJsonResponse);
                     state = jsonObject.getString("msg");
-                }
-                catch (Exception e){
+                } catch (Exception e) {
                     System.out.println("Error: JSON 数据解析出错，服务器端未传回指定格式数据");
                     continue;
                 }
@@ -81,12 +88,12 @@ public class Console {
                     System.out.print("SQL> ");
                     while (!(lines = sc.nextLine()).equals("quit")) // 如果不输入 quit 则一直输入
                     {
-                        if(lines.isEmpty()) {
+                        if (lines.isEmpty()) {
                             System.out.print("SQL> ");
                             continue;
                         }
 
-                        // 末尾 ";" 和空格处理
+                        /* 对末尾 ";" 和空格处理 */
                         lines = rightTrim(lines);
                         if (lines.lastIndexOf(';') == lines.length() - 1) {
                             lines = lines.substring(0, lines.length() - 1);
@@ -94,18 +101,17 @@ public class Console {
                         }
 
                         lines = rightTrim(lines);
-                        if(lines.equals("")){
+                        if (lines.equals("")) {
                             System.out.print("SQL> ");
                             continue;
                         }
 
                         try {
                             // 执行 SQL 语句，获得结果
-
-                            lines =URLEncoder.encode(lines,"utf-8");
-                            lines="sqlExecute?sql="+lines;
+                            lines = URLEncoder.encode(lines, "utf-8");
+                            lines = "sqlExecute?sql=" + lines;
                             WebResource webResource = client
-                                    .resource(targetURL+lines);
+                                    .resource(targetURL + lines);
 
                             ClientResponse response = webResource.accept("application/json")
                                     .get(ClientResponse.class);
@@ -118,23 +124,21 @@ public class Console {
                             String json = response.getEntity(String.class);
 
                             // JSON 数据解析并打印
-                            Console myConsole = new Console();
+                            ApplicationEntry myConsole = new ApplicationEntry();
                             myConsole.jsonParser(json);
-                        }catch (Exception e)
-                        {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
 
                         System.out.print("SQL> ");
                     }
                     break;
-                } else if (state.equals("no"))
+                }
                 // 用户名，密码不正确
-                {
+                else if (state.equals("no")) {
                     // 再次输入用户名密码
                     System.out.println("Err: 账号密码错误，请重试");
-                }
-                else {
+                } else {
                     // 服务器端出现问题（如传输过程等问题）
                     System.out.println("Error: " + state);
                 }
@@ -146,6 +150,7 @@ public class Console {
 
     /**
      * 去掉末尾空格
+     *
      * @param str 需要处理的字符串
      * @return 处理得到的字符串
      */
@@ -156,9 +161,9 @@ public class Console {
     /**
      * 将获得的json数据进行解析，并显示在界面上
      *
-     * @param     json  json字符串
+     * @param json json字符串
      */
-    private void jsonParser(String json){
+    private void jsonParser(String json) {
         String code, msg, time, size;
         JSONObject jsonObj;
 
@@ -168,14 +173,13 @@ public class Console {
             jsonObj = JSONObject.fromObject(json);
             code = jsonObj.getString("code");
 
-        }catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("Error: JSON 数据解析出错，服务器端未传回指定格式数据");
             return;
         }
 
         // 检查错误代码
-        if(Integer.valueOf(code) == 0) {// 如果无错误
+        if (Integer.valueOf(code) == 0) {   // 如果无错误
             time = jsonObj.getString("time");
             size = jsonObj.getString("size");
 
@@ -221,8 +225,7 @@ public class Console {
                 System.out.println();
                 System.out.println("SQL Execution Time: " + time + "  HDFS R&W Size: " + size);
             }
-        }
-        else{
+        } else {
             msg = jsonObj.getString("msg");
             System.out.println("Error: " + msg);
         }
