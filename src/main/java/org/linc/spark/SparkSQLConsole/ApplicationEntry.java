@@ -24,6 +24,11 @@ public class ApplicationEntry {
 
     private static String targetURL = "http://localhost:8080/SparkSQLServer/service/";
 
+    /**
+     * main 函数
+     *
+     * @param args 程序参数
+     */
     public static void main(String[] args) {
         // 获取资源地址
         if (args.length > 0) {
