@@ -21,8 +21,17 @@ import java.util.Scanner;
  * 程序入口
  */
 public class ApplicationEntry {
+    private static String resourceURL = null;
 
-    private static String targetURL = "http://localhost:8080/SparkSQLServer/service/";
+    /**
+     * 解析程序运行参数，读取配置文件
+     *
+     * @param args 程序参数
+     */
+    private static void readConfigureFile(String[] args) {
+        GlobalVar.parseArgs(args);
+        ApplicationEntry.resourceURL = GlobalVar.configMap.get("resource.url");
+    }
 
     /**
      * main 函数
@@ -30,10 +39,8 @@ public class ApplicationEntry {
      * @param args 程序参数
      */
     public static void main(String[] args) {
-        // 获取资源地址
-        if (args.length > 0) {
-            ApplicationEntry.targetURL = args[0];
-        }
+        // 解析程序运行参数，读取配置文件
+        ApplicationEntry.readConfigureFile(args);
 
         Client client = null;
         while (true) {
@@ -58,7 +65,7 @@ public class ApplicationEntry {
 
                     // 连接服务器验证用户名与密码
                     WebResource webResource = client
-                            .resource(targetURL + getURL);
+                            .resource(ApplicationEntry.resourceURL + getURL);
 
                     ClientResponse response = webResource.accept("application/json")
                             .get(ClientResponse.class);
@@ -116,7 +123,7 @@ public class ApplicationEntry {
                             lines = URLEncoder.encode(lines, "utf-8");
                             lines = "sqlExecute?sql=" + lines;
                             WebResource webResource = client
-                                    .resource(targetURL + lines);
+                                    .resource(ApplicationEntry.resourceURL + lines);
 
                             ClientResponse response = webResource.accept("application/json")
                                     .get(ClientResponse.class);
@@ -235,5 +242,4 @@ public class ApplicationEntry {
             System.out.println("Error: " + msg);
         }
     }
-
 }
