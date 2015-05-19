@@ -7,6 +7,7 @@ import dnl.utils.text.table.TextTable;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Scanner;
 
 /**
  * 程序入口
+ *
  * @author bitorange / ihainan
  * @version 1.1
  */
@@ -44,151 +46,151 @@ public class ApplicationEntry {
 
         Client client = null;
         while (true) {
+
+            // 用户名与密码
+            Scanner sc = new Scanner(System.in);
+            System.out.print("UserName : ");
+            String name = sc.nextLine();
+            System.out.print("Password : ");
+            String password = sc.nextLine();
+
+            // 对字符串进行 utf-8 编码为 url 格式
+            String getURL = null;
             try {
-                // 用户名与密码
-                Scanner sc = new Scanner(System.in);
-                System.out.print("UserName : ");
-                String name = sc.nextLine();
-                System.out.print("Password : ");
-                String password = sc.nextLine();
+                getURL = "check?name=" + URLEncoder.encode(name, "utf-8") + "&password=" + password;
+            } catch (UnsupportedEncodingException e) {
+                System.err.println("Error occurred during encoding username & password: \n" + e.getMessage());
+            }
 
-                // 对字符串进行 utf-8 编码为 url 格式
-                String getURL = "check?name=" + URLEncoder.encode(name, "utf-8") + "&password=" + password;
-
-                // 连接到远程服务器
-                String state;
-                String myJsonResponse;
-                try {
-                    if (client == null) {
-                        client = Client.create();
-                    }
-
-                    // 连接服务器验证用户名与密码
-                    WebResource webResource = client
-                            .resource(ApplicationEntry.resourceURL + getURL);
-
-                    ClientResponse response = webResource.accept("application/json")
-                            .get(ClientResponse.class);
-
-                    if (response.getStatus() != 200) {
-                        throw new RuntimeException("Failed : HTTP error code : "
-                                + response.getStatus());
-                    }
-
-                    myJsonResponse = response.getEntity(String.class);
-                } catch (Exception e) {
-                    System.out.println("ERROR: 连接远程服务器的过程中发生错误，错误原因：" + e.getMessage());
-                    continue;
+            // 连接到远程服务器
+            String state;
+            String myJsonResponse;
+            try {
+                if (client == null) {
+                    client = Client.create();
                 }
 
-                // JSON 解析，获取状态信息
-                try {
-                    JSONObject jsonObject = JSONObject.fromObject(myJsonResponse);
-                    state = jsonObject.getString("msg");
-                } catch (Exception e) {
-                    System.out.println("ERROR: JSON 数据解析出错，服务器端未传回指定格式数据");
-                    continue;
+                // 连接服务器验证用户名与密码
+                WebResource webResource = client
+                        .resource(ApplicationEntry.resourceURL + getURL);
+
+                ClientResponse response = webResource.accept("application/json")
+                        .get(ClientResponse.class);
+
+                if (response.getStatus() != 200) {
+                    throw new RuntimeException("Failed : HTTP error code : "
+                            + response.getStatus());
                 }
 
-                String lastJsonData = "";   // 最近一次 SQL 查询得到的查询数据
-                int startPoint = 0;
-                int endPoint;
-                int size = -1;
-
-                if (state.equals("ok"))
-                // 用户名，密码正确
-                {
-                    System.out.println("Login succeeded");
-
-                    // 继续输入 SQL 语句
-                    String lines;
-                    System.out.print("SQL> ");
-                    while (!(lines = sc.nextLine()).equals("quit")) // 如果不输入 quit 则一直输入
-                    {
-                        if (lines.isEmpty()) {
-                            System.out.print("SQL> ");
-                            continue;
-                        }
-
-
-                        /* 对末尾 ";" 和空格处理 */
-                        lines = lines.replace("\"", "'");
-                        lines = rightTrim(lines);
-                        if (lines.lastIndexOf(';') == lines.length() - 1) {
-                            lines = lines.substring(0, lines.length() - 1);
-
-                        }
-
-                        lines = rightTrim(lines);
-                        if (lines.equals("")) {
-                            System.out.print("SQL> ");
-                            continue;
-                        }
-
-                        // 检查是不是指令 "next"
-                        if (lines.equalsIgnoreCase("next")) {
-                            if (lastJsonData.equals("")) {
-                                System.out.println("No saved SQL result.");
-                            } else {
-                                startPoint = startPoint + numberOfItemsPerPage >= size ? startPoint : startPoint + numberOfItemsPerPage;
-                                endPoint = startPoint + numberOfItemsPerPage - 1 >= size ? size - 1 : startPoint + numberOfItemsPerPage - 1;
-                                ApplicationEntry myConsole = new ApplicationEntry();
-                                size = myConsole.jsonParser(lastJsonData, startPoint, endPoint);
-                            }
-                        }
-                        // 检查是不是指令 "pre"
-                        else if (lines.equalsIgnoreCase("pre")) {
-                            if (lastJsonData.equals("")) {
-                                System.out.println("No saved SQL result.");
-                            } else {
-                                startPoint = startPoint - numberOfItemsPerPage < 0 ? 0 : startPoint - numberOfItemsPerPage;
-                                endPoint = startPoint + numberOfItemsPerPage - 1 >= size ? size - 1 : startPoint + numberOfItemsPerPage - 1;
-                                ApplicationEntry myConsole = new ApplicationEntry();
-                                size = myConsole.jsonParser(lastJsonData, startPoint, endPoint);
-                            }
-                        } else {
-                            try {
-                                // 执行 SQL 语句，获得结果
-                                lines = URLEncoder.encode(lines, "utf-8");
-                                lines = "sqlExecute?sql=" + lines;
-                                WebResource webResource = client
-                                        .resource(ApplicationEntry.resourceURL + lines);
-
-                                ClientResponse response = webResource.accept("application/json")
-                                        .get(ClientResponse.class);
-
-                                if (response.getStatus() != 200) {
-                                    throw new RuntimeException("Failed : HTTP error code : "
-                                            + response.getStatus());
-                                }
-
-                                String json = response.getEntity(String.class);
-
-                                // JSON 数据解析并打印
-                                ApplicationEntry myConsole = new ApplicationEntry();
-                                lastJsonData = json;
-                                startPoint = 0;
-                                endPoint = numberOfItemsPerPage - 1;
-                                size = myConsole.jsonParser(json, startPoint, endPoint);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        System.out.print("SQL> ");
-                    }
-                    break;
-                }
-                // 用户名，密码不正确
-                else if (state.equals("no")) {
-                    // 再次输入用户名密码
-                    System.out.println("ERROR: 账号密码错误，请重试");
-                } else {
-                    // 服务器端出现问题（如传输过程等问题）
-                    System.out.println("ERROR: " + state);
-                }
+                myJsonResponse = response.getEntity(String.class);
             } catch (Exception e) {
-                System.out.println("ERROR: 发生错误，错误原因：" + e.getMessage());
+                System.err.println("Error occurred during connecting to the remote server: \n" + e.getMessage());
+                continue;
+            }
+
+            // JSON 解析，获取状态信息
+            try {
+                JSONObject jsonObject = JSONObject.fromObject(myJsonResponse);
+                state = jsonObject.getString("msg");
+            } catch (Exception e) {
+                System.err.println("Error occurred during the parsing of JSON string: \n" + e.getMessage());
+                continue;
+            }
+
+            String lastJsonData = "";   // 最近一次 SQL 查询得到的查询数据
+            int startPoint = 0;
+            int endPoint;
+            int size = -1;
+
+            if (state.equals("ok"))
+            // 用户名，密码正确
+            {
+                System.out.println("Login succeeded");
+
+                // 继续输入 SQL 语句
+                String lines;
+                System.out.print("SQL> ");
+                while (!(lines = sc.nextLine()).equals("quit")) // 如果不输入 quit 则一直输入
+                {
+                    if (lines.isEmpty()) {
+                        System.out.print("SQL> ");
+                        continue;
+                    }
+
+
+                    /* 对末尾 ";" 和空格处理 */
+                    lines = lines.replace("\"", "'");
+                    lines = rightTrim(lines);
+                    if (lines.lastIndexOf(';') == lines.length() - 1) {
+                        lines = lines.substring(0, lines.length() - 1);
+                    }
+
+                    lines = rightTrim(lines);
+                    if (lines.equals("")) {
+                        System.out.print("SQL> ");
+                        continue;
+                    }
+
+                    // 检查是不是指令 "next"
+                    if (lines.equalsIgnoreCase("next")) {
+                        if (lastJsonData.equals("")) {
+                            System.out.println("No saved SQL result.");
+                        } else {
+                            startPoint = startPoint + numberOfItemsPerPage >= size ? startPoint : startPoint + numberOfItemsPerPage;
+                            endPoint = startPoint + numberOfItemsPerPage - 1 >= size ? size - 1 : startPoint + numberOfItemsPerPage - 1;
+                            ApplicationEntry myConsole = new ApplicationEntry();
+                            size = myConsole.jsonParser(lastJsonData, startPoint, endPoint);
+                        }
+                    }
+                    // 检查是不是指令 "pre"
+                    else if (lines.equalsIgnoreCase("pre")) {
+                        if (lastJsonData.equals("")) {
+                            System.out.println("No saved SQL result.");
+                        } else {
+                            startPoint = startPoint - numberOfItemsPerPage < 0 ? 0 : startPoint - numberOfItemsPerPage;
+                            endPoint = startPoint + numberOfItemsPerPage - 1 >= size ? size - 1 : startPoint + numberOfItemsPerPage - 1;
+                            ApplicationEntry myConsole = new ApplicationEntry();
+                            size = myConsole.jsonParser(lastJsonData, startPoint, endPoint);
+                        }
+                    } else {
+                        // 执行 SQL 语句，获得结果
+                        try {
+                            lines = URLEncoder.encode(lines, "utf-8");
+                        } catch (UnsupportedEncodingException e) {
+                            System.err.println("Error occurred during encoding username & password: \n" + e.getMessage());
+                        }
+                        lines = "sqlExecute?sql=" + lines;
+                        WebResource webResource = client
+                                .resource(ApplicationEntry.resourceURL + lines);
+
+                        ClientResponse response = webResource.accept("application/json")
+                                .get(ClientResponse.class);
+
+                        if (response.getStatus() != 200) {
+                            throw new RuntimeException("Failed : HTTP error code : "
+                                    + response.getStatus());
+                        }
+
+                        String json = response.getEntity(String.class);
+
+                        // JSON 数据解析并打印
+                        ApplicationEntry myConsole = new ApplicationEntry();
+                        lastJsonData = json;
+                        startPoint = 0;
+                        endPoint = numberOfItemsPerPage - 1;
+                        size = myConsole.jsonParser(json, startPoint, endPoint);
+                    }
+                    System.out.print("SQL> ");
+                }
+                break;
+            }
+            // 用户名，密码不正确
+            else if (state.equals("no")) {
+                // 再次输入用户名密码
+                System.err.println("Wrong password, please try again.");
+            } else {
+                // 服务器端出现问题（如传输过程等问题）
+                System.err.println("ERROR occurred during connecting to the remote server\n" + state);
             }
         }
     }
@@ -218,7 +220,7 @@ public class ApplicationEntry {
             jsonObj = JSONObject.fromObject(json);
             code = jsonObj.getString("code");
         } catch (Exception e) {
-            System.out.println("ERROR: JSON 数据解析出错，服务器端未传回指定格式数据");
+            System.out.println("Error occurred during the parsing of JSON string: \n" + e.toString());
             return -1;
         }
 
@@ -283,7 +285,7 @@ public class ApplicationEntry {
             }
         } else {
             msg = jsonObj.getString("msg");
-            System.out.println("ERROR: " + msg);
+            System.err.println("Error occurred during the execution of SQL command: \n" + msg);
             return -1;
         }
     }
