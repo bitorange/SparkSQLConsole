@@ -45,9 +45,9 @@ public class ApplicationEntry {
             try {
                 // 用户名与密码
                 Scanner sc = new Scanner(System.in);
-                System.out.print("用户名: ");
+                System.out.print("UserName : ");
                 String name = sc.nextLine();
-                System.out.print("密码: ");
+                System.out.print("Password : ");
                 String password = sc.nextLine();
 
                 // 对字符串进行 utf-8 编码为 url 格式
@@ -90,13 +90,13 @@ public class ApplicationEntry {
 
                 String lastJsonData = "";   // 最近一次 SQL 查询得到的查询数据
                 int startPoint = 0;
-                int endPoint = numberOfItemsPerPage - 1;
+                int endPoint;
                 int size = -1;
 
                 if (state.equals("ok"))
                 // 用户名，密码正确
                 {
-                    System.out.println("登录成功");
+                    System.out.println("Login succeeded");
 
                     // 继续输入 SQL 语句
                     String lines;
@@ -124,10 +124,9 @@ public class ApplicationEntry {
 
                         // 检查是不是指令 "next"
                         if (lines.equalsIgnoreCase("next")) {
-                            if(lastJsonData.equals("")){
+                            if (lastJsonData.equals("")) {
                                 System.out.println("No saved SQL result.");
-                            }
-                            else {
+                            } else {
                                 startPoint = startPoint + numberOfItemsPerPage >= size ? startPoint : startPoint + numberOfItemsPerPage;
                                 endPoint = startPoint + numberOfItemsPerPage - 1 >= size ? size - 1 : startPoint + numberOfItemsPerPage - 1;
                                 ApplicationEntry myConsole = new ApplicationEntry();
@@ -136,10 +135,9 @@ public class ApplicationEntry {
                         }
                         // 检查是不是指令 "pre"
                         else if (lines.equalsIgnoreCase("pre")) {
-                            if(lastJsonData.equals("")){
+                            if (lastJsonData.equals("")) {
                                 System.out.println("No saved SQL result.");
-                            }
-                            else {
+                            } else {
                                 startPoint = startPoint - numberOfItemsPerPage < 0 ? 0 : startPoint - numberOfItemsPerPage;
                                 endPoint = startPoint + numberOfItemsPerPage - 1 >= size ? size - 1 : startPoint + numberOfItemsPerPage - 1;
                                 ApplicationEntry myConsole = new ApplicationEntry();
@@ -165,12 +163,10 @@ public class ApplicationEntry {
 
                                 // JSON 数据解析并打印
                                 ApplicationEntry myConsole = new ApplicationEntry();
+                                lastJsonData = json;
+                                startPoint = 0;
+                                endPoint = numberOfItemsPerPage - 1;
                                 size = myConsole.jsonParser(json, startPoint, endPoint);
-                                if (size > 0) {
-                                    lastJsonData = json;
-                                    startPoint = 0;
-                                    endPoint = numberOfItemsPerPage - 1;
-                                }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -247,7 +243,7 @@ public class ApplicationEntry {
                 header = headerList.toArray(header);
 
                 // 得到表中数据内容存在二维数组中
-                if(endPoint >= mapListJson.size()){
+                if (endPoint >= mapListJson.size()) {
                     endPoint = mapListJson.size() - 1;
                 }
                 String[][] data = new String[endPoint - startPoint + 1][headerList.size()];

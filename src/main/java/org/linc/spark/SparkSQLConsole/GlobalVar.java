@@ -64,6 +64,6 @@ public class GlobalVar {
             String val = node.getTextContent();
             configMap.put(key, val);
         }
-        System.out.println(configMap);
+        // System.out.println(configMap);
     }
 }
