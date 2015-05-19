@@ -15,6 +15,8 @@ import java.util.Scanner;
 
 /**
  * 程序入口
+ * @author bitorange / ihainan
+ * @version 1.1
  */
 public class ApplicationEntry {
     private static String resourceURL = null;
@@ -110,6 +112,7 @@ public class ApplicationEntry {
 
 
                         /* 对末尾 ";" 和空格处理 */
+                        lines = lines.replace("\"", "'");
                         lines = rightTrim(lines);
                         if (lines.lastIndexOf(';') == lines.length() - 1) {
                             lines = lines.substring(0, lines.length() - 1);
