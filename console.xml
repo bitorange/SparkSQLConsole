@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <property>
 <entry key="resource.url">http://localhost:8080/SparkSQLServer/service/</entry>
+<entry key="sql.result.itemsPerPage">11</entry>
 </property>

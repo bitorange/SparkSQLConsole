@@ -1,9 +1,5 @@
 package org.linc.spark.SparkSQLConsole;
 
-/**
- * Created by orange on 2015/3/30.
- */
-
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -22,6 +18,7 @@ import java.util.Scanner;
  */
 public class ApplicationEntry {
     private static String resourceURL = null;
+    private static int numberOfItemsPerPage = 2;
 
     /**
      * 解析程序运行参数，读取配置文件
@@ -31,6 +28,7 @@ public class ApplicationEntry {
     private static void readConfigureFile(String[] args) {
         GlobalVar.parseArgs(args);
         ApplicationEntry.resourceURL = GlobalVar.configMap.get("resource.url");
+        ApplicationEntry.numberOfItemsPerPage = Integer.valueOf(GlobalVar.configMap.get("sql.result.itemsPerPage"));
     }
 
     /**
@@ -77,7 +75,7 @@ public class ApplicationEntry {
 
                     myJsonResponse = response.getEntity(String.class);
                 } catch (Exception e) {
-                    System.out.println("Err: 连接远程服务器的过程中发生错误，错误原因：" + e.getMessage());
+                    System.out.println("ERROR: 连接远程服务器的过程中发生错误，错误原因：" + e.getMessage());
                     continue;
                 }
 
@@ -86,9 +84,14 @@ public class ApplicationEntry {
                     JSONObject jsonObject = JSONObject.fromObject(myJsonResponse);
                     state = jsonObject.getString("msg");
                 } catch (Exception e) {
-                    System.out.println("Error: JSON 数据解析出错，服务器端未传回指定格式数据");
+                    System.out.println("ERROR: JSON 数据解析出错，服务器端未传回指定格式数据");
                     continue;
                 }
+
+                String lastJsonData = "";   // 最近一次 SQL 查询得到的查询数据
+                int startPoint = 0;
+                int endPoint = numberOfItemsPerPage - 1;
+                int size = -1;
 
                 if (state.equals("ok"))
                 // 用户名，密码正确
@@ -105,6 +108,7 @@ public class ApplicationEntry {
                             continue;
                         }
 
+
                         /* 对末尾 ";" 和空格处理 */
                         lines = rightTrim(lines);
                         if (lines.lastIndexOf(';') == lines.length() - 1) {
@@ -118,28 +122,58 @@ public class ApplicationEntry {
                             continue;
                         }
 
-                        try {
-                            // 执行 SQL 语句，获得结果
-                            lines = URLEncoder.encode(lines, "utf-8");
-                            lines = "sqlExecute?sql=" + lines;
-                            WebResource webResource = client
-                                    .resource(ApplicationEntry.resourceURL + lines);
-
-                            ClientResponse response = webResource.accept("application/json")
-                                    .get(ClientResponse.class);
-
-                            if (response.getStatus() != 200) {
-                                throw new RuntimeException("Failed : HTTP error code : "
-                                        + response.getStatus());
+                        // 检查是不是指令 "next"
+                        if (lines.equalsIgnoreCase("next")) {
+                            if(lastJsonData.equals("")){
+                                System.out.println("No saved SQL result.");
                             }
+                            else {
+                                startPoint = startPoint + numberOfItemsPerPage >= size ? startPoint : startPoint + numberOfItemsPerPage;
+                                endPoint = startPoint + numberOfItemsPerPage - 1 >= size ? size - 1 : startPoint + numberOfItemsPerPage - 1;
+                                ApplicationEntry myConsole = new ApplicationEntry();
+                                size = myConsole.jsonParser(lastJsonData, startPoint, endPoint);
+                            }
+                        }
+                        // 检查是不是指令 "pre"
+                        else if (lines.equalsIgnoreCase("pre")) {
+                            if(lastJsonData.equals("")){
+                                System.out.println("No saved SQL result.");
+                            }
+                            else {
+                                startPoint = startPoint - numberOfItemsPerPage < 0 ? 0 : startPoint - numberOfItemsPerPage;
+                                endPoint = startPoint + numberOfItemsPerPage - 1 >= size ? size - 1 : startPoint + numberOfItemsPerPage - 1;
+                                ApplicationEntry myConsole = new ApplicationEntry();
+                                size = myConsole.jsonParser(lastJsonData, startPoint, endPoint);
+                            }
+                        } else {
+                            try {
+                                // 执行 SQL 语句，获得结果
+                                lines = URLEncoder.encode(lines, "utf-8");
+                                lines = "sqlExecute?sql=" + lines;
+                                WebResource webResource = client
+                                        .resource(ApplicationEntry.resourceURL + lines);
 
-                            String json = response.getEntity(String.class);
+                                ClientResponse response = webResource.accept("application/json")
+                                        .get(ClientResponse.class);
 
-                            // JSON 数据解析并打印
-                            ApplicationEntry myConsole = new ApplicationEntry();
-                            myConsole.jsonParser(json);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                                if (response.getStatus() != 200) {
+                                    throw new RuntimeException("Failed : HTTP error code : "
+                                            + response.getStatus());
+                                }
+
+                                String json = response.getEntity(String.class);
+
+                                // JSON 数据解析并打印
+                                ApplicationEntry myConsole = new ApplicationEntry();
+                                size = myConsole.jsonParser(json, startPoint, endPoint);
+                                if (size > 0) {
+                                    lastJsonData = json;
+                                    startPoint = 0;
+                                    endPoint = numberOfItemsPerPage - 1;
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
 
                         System.out.print("SQL> ");
@@ -149,13 +183,13 @@ public class ApplicationEntry {
                 // 用户名，密码不正确
                 else if (state.equals("no")) {
                     // 再次输入用户名密码
-                    System.out.println("Err: 账号密码错误，请重试");
+                    System.out.println("ERROR: 账号密码错误，请重试");
                 } else {
                     // 服务器端出现问题（如传输过程等问题）
-                    System.out.println("Error: " + state);
+                    System.out.println("ERROR: " + state);
                 }
             } catch (Exception e) {
-                System.out.println("Err: 发生错误，错误原因：" + e.getMessage());
+                System.out.println("ERROR: 发生错误，错误原因：" + e.getMessage());
             }
         }
     }
@@ -175,23 +209,22 @@ public class ApplicationEntry {
      *
      * @param json json字符串
      */
-    private void jsonParser(String json) {
+    private int jsonParser(String json, int startPoint, int endPoint) {
         String code, msg, time, size;
         JSONObject jsonObj;
 
         // 解析 JSON 数据
         try {
-            // 获取code对象
+            // 获取错误代码
             jsonObj = JSONObject.fromObject(json);
             code = jsonObj.getString("code");
-
         } catch (Exception e) {
-            System.out.println("Error: JSON 数据解析出错，服务器端未传回指定格式数据");
-            return;
+            System.out.println("ERROR: JSON 数据解析出错，服务器端未传回指定格式数据");
+            return -1;
         }
 
         // 检查错误代码
-        if (Integer.valueOf(code) == 0) {   // 如果无错误
+        if (Integer.valueOf(code) == 0) {   // 执行命令正常
             time = jsonObj.getString("time");
             size = jsonObj.getString("size");
 
@@ -202,11 +235,10 @@ public class ApplicationEntry {
 
                 // 得到表头
                 ArrayList<String> headerList = new ArrayList<String>();
-                Map<String, Object> obj1 = mapListJson.get(0);
+                Map<String, Object> jsonObjs = mapListJson.get(0);
 
-                // TODO: 需要优化
-                for (Map.Entry<String, Object> entry : obj1.entrySet()) {
-                    String strKey = entry.getKey();    // 表头
+                for (Map.Entry<String, Object> entry : jsonObjs.entrySet()) {
+                    String strKey = entry.getKey();
                     headerList.add(strKey);
                 }
 
@@ -215,14 +247,17 @@ public class ApplicationEntry {
                 header = headerList.toArray(header);
 
                 // 得到表中数据内容存在二维数组中
-                String[][] data = new String[mapListJson.size()][headerList.size()];
+                if(endPoint >= mapListJson.size()){
+                    endPoint = mapListJson.size() - 1;
+                }
+                String[][] data = new String[endPoint - startPoint + 1][headerList.size()];
                 int j;
-                for (int i = 0; i < mapListJson.size(); i++) {
-                    Map<String, Object> obj = mapListJson.get(i);
+                for (int i = 0; i < endPoint - startPoint + 1; i++) {
+                    Map<String, Object> obj = mapListJson.get(startPoint + i);
                     j = 0;
                     for (Map.Entry<String, Object> entry : obj.entrySet()) {
-                        Object strval1 = entry.getValue();
-                        data[i][j++] = strval1.toString();
+                        Object strVal = entry.getValue();
+                        data[i][j++] = strVal.toString();
                     }
                 }
 
@@ -235,11 +270,22 @@ public class ApplicationEntry {
                 // 打印表格
                 tt.printTable();
                 System.out.println();
-                System.out.println("SQL Execution Time: " + time + "  HDFS R&W Size: " + size);
+                System.out.println(mapListJson.size() + " rows [" + startPoint + " - " + endPoint + "] in set (" + time + ", " + size + ")");
+                if (endPoint != mapListJson.size() - 1) {
+                    System.out.println("Enter command `next` to see next " + numberOfItemsPerPage + " row" + (numberOfItemsPerPage == 1 ? "." : "s."));
+                }
+                if (startPoint != 0) {
+                    System.out.println("Enter command `pre` to see previous " + numberOfItemsPerPage + " row" + (numberOfItemsPerPage == 1 ? "." : "s."));
+                }
+                return mapListJson.size();
+            } else {
+                System.out.println("Query OK (" + time + ", " + size + ")");
+                return 0;
             }
         } else {
             msg = jsonObj.getString("msg");
-            System.out.println("Error: " + msg);
+            System.out.println("ERROR: " + msg);
+            return -1;
         }
     }
 }

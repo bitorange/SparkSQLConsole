@@ -22,6 +22,7 @@ public class GlobalVar {
      */
     static {
         configMap.put("resource.url", "http://10.4.21.103:8080/SparkSQLServer/service/");
+        configMap.put("sql.result.itemsPerPage", "5");
     }
 
     public static void parseArgs(String args[]) {
