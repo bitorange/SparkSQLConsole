@@ -32,7 +32,7 @@ public class GlobalVar {
         // 解析程序运行参数
         ArgumentParser parser = ArgumentParsers.newArgumentParser("console").defaultHelp(true).description("Spark SQL Console By LINC");
         parser.addArgument("-c", "--config")
-                .setDefault("./conf.xml")
+                .setDefault("./console.xml")
                 .help("specify the system configuration file");
 
         Namespace ns = null;

@@ -5,6 +5,6 @@
 <entry key="resource.url">https://lab.ihainan.me:8444/var/lib/tomcat7/webapps/SparkSQLServer/service/</entry>
 <entry key="sql.result.itemsPerPage">11</entry>
 <entry key="ssl.cer.protocol">SSL</entry>
-<entry key="ssl.cer.clientTrustCer">/Users/ihainan/tmp/sparkSQL/clientTrust.jks</entry>
+<entry key="ssl.cer.clientTrustCer">/home/ihainan/tmp/keys/clientTrust.jks</entry>
 <entry key="ssl.cer.clientTrustCerPwd">123456</entry>
 </property>
