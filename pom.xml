@@ -63,9 +63,7 @@
         <dependency>
             <groupId>dnl</groupId>
             <artifactId>j-text-utils</artifactId>
-            <scope>system</scope>
             <version>0.3.3</version>
-            <systemPath>${basedir}/lib/j-text-utils.jar</systemPath>
         </dependency>
     </dependencies>
     <build>
