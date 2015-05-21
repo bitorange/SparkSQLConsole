@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <property>
-<entry key="resource.url">http://localhost:8080/SparkSQLServer/service/</entry>
+<!-- <entry key="resource.url">http://localhost:8080/SparkSQLServer/service/</entry> -->
+<!-- <entry key="resource.url">http://lab.ihainan.me:8080/var/lib/tomcat7/webapps/SparkSQLServer/service/</entry> -->
+<entry key="resource.url">https://lab.ihainan.me:8444/var/lib/tomcat7/webapps/SparkSQLServer/service/</entry>
 <entry key="sql.result.itemsPerPage">11</entry>
+<entry key="ssl.cer.protocol">SSL</entry>
+<entry key="ssl.cer.clientTrustCer">/Users/ihainan/tmp/sparkSQL/clientTrust.jks</entry>
+<entry key="ssl.cer.clientTrustCerPwd">123456</entry>
 </property>

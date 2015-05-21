@@ -55,5 +55,10 @@
             <artifactId>commons-configuration</artifactId>
             <version>1.6</version>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+            <version>2.15</version>
+        </dependency>
     </dependencies>
 </project>

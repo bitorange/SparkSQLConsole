@@ -3,10 +3,17 @@ package org.linc.spark.SparkSQLConsole;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import dnl.utils.text.table.TextTable;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.glassfish.jersey.SslConfigurator;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -23,6 +30,9 @@ import java.util.Scanner;
 public class ApplicationEntry {
     private static String resourceURL = null;
     private static int numberOfItemsPerPage = 2;
+    private static SSLContext sslContext;
+    private static String clientTrustCer, clientTrustCerPwd, protocol;
+
 
     /**
      * 解析程序运行参数，读取配置文件
@@ -33,6 +43,52 @@ public class ApplicationEntry {
         GlobalVar.parseArgs(args);
         ApplicationEntry.resourceURL = GlobalVar.configMap.get("resource.url");
         ApplicationEntry.numberOfItemsPerPage = Integer.valueOf(GlobalVar.configMap.get("sql.result.itemsPerPage"));
+        ApplicationEntry.clientTrustCer = GlobalVar.configMap.get("ssl.cer.clientTrustCer");
+        ApplicationEntry.clientTrustCerPwd = GlobalVar.configMap.get("ssl.cer.clientTrustCerPwd");
+        ApplicationEntry.protocol = GlobalVar.configMap.get("ssl.cer.protocol");
+    }
+
+    private static void setUpSSL(){
+        SslConfigurator sslConfig = SslConfigurator.newInstance();
+        sslConfig.trustStoreFile(ApplicationEntry.clientTrustCer).trustStorePassword(ApplicationEntry.clientTrustCerPwd);
+        sslConfig.securityProtocol(ApplicationEntry.protocol);
+        ApplicationEntry.sslContext = sslConfig.createSSLContext();
+
+    }
+
+    /**
+     * 主机名认证，本地直接通过验证
+     */
+    private static class MyHostnameVerifier implements HostnameVerifier {
+        private static String getHost(String url){
+            if(url == null || url.length() == 0)
+                return "";
+
+            int doubleslash = url.indexOf("//");
+            if(doubleslash == -1)
+                doubleslash = 0;
+            else
+                doubleslash += 2;
+
+            int end = url.indexOf('/', doubleslash);
+            end = end >= 0 ? end : url.length();
+
+            int port = url.indexOf(':', doubleslash);
+            end = (port > 0 && port < end) ? port : end;
+
+            return url.substring(doubleslash, end);
+        }
+
+        @Override
+        public boolean verify(String hostname, SSLSession sslSession) {
+            String hostnameFromUrl = getHost(ApplicationEntry.resourceURL);
+            if("127.0.0.1".equals(hostname) || "localhost".equals("hostname") || hostnameFromUrl.equals(hostname)){
+                return true;
+            }
+            else{
+                return false;
+            }
+        }
     }
 
     /**
@@ -43,6 +99,7 @@ public class ApplicationEntry {
     public static void main(String[] args) {
         // 解析程序运行参数，读取配置文件
         ApplicationEntry.readConfigureFile(args);
+        ApplicationEntry.setUpSSL();
 
         Client client = null;
         while (true) {
@@ -67,7 +124,10 @@ public class ApplicationEntry {
             String myJsonResponse;
             try {
                 if (client == null) {
-                    client = Client.create();
+                    ClientConfig cc = new DefaultClientConfig();
+                    cc.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
+                            new HTTPSProperties(new MyHostnameVerifier(), sslContext));
+                    client = Client.create(cc);
                 }
 
                 // 连接服务器验证用户名与密码

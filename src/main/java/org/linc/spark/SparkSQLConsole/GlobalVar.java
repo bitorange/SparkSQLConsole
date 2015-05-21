@@ -23,6 +23,9 @@ public class GlobalVar {
     static {
         configMap.put("resource.url", "http://10.4.21.103:8080/SparkSQLServer/service/");
         configMap.put("sql.result.itemsPerPage", "5");
+        configMap.put("ssl.cer.clientTrustCerPwd", "123456");
+        configMap.put("ssl.cer.clientTrustCer", "/Users/ihainan/tmp/sparkSQL/clientTrust.jks");
+        configMap.put("ssl.cer.protocol", "SSL");
     }
 
     public static void parseArgs(String args[]) {
