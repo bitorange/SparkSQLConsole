@@ -32,6 +32,7 @@ public class ApplicationEntry {
     private static int numberOfItemsPerPage = 2;
     private static SSLContext sslContext;
     private static String clientTrustCer, clientTrustCerPwd, protocol;
+    private static boolean isEnableSSL;
 
 
     /**
@@ -46,6 +47,7 @@ public class ApplicationEntry {
         ApplicationEntry.clientTrustCer = GlobalVar.configMap.get("ssl.cer.clientTrustCer");
         ApplicationEntry.clientTrustCerPwd = GlobalVar.configMap.get("ssl.cer.clientTrustCerPwd");
         ApplicationEntry.protocol = GlobalVar.configMap.get("ssl.cer.protocol");
+        ApplicationEntry.isEnableSSL = Boolean.valueOf(GlobalVar.configMap.get("ssl.enableSSL"));
     }
 
     private static void setUpSSL(){
@@ -99,7 +101,9 @@ public class ApplicationEntry {
     public static void main(String[] args) {
         // 解析程序运行参数，读取配置文件
         ApplicationEntry.readConfigureFile(args);
-        ApplicationEntry.setUpSSL();
+        if(isEnableSSL) {
+            ApplicationEntry.setUpSSL();
+        }
 
         Client client = null;
         while (true) {
@@ -124,10 +128,15 @@ public class ApplicationEntry {
             String myJsonResponse;
             try {
                 if (client == null) {
-                    ClientConfig cc = new DefaultClientConfig();
-                    cc.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
-                            new HTTPSProperties(new MyHostnameVerifier(), sslContext));
-                    client = Client.create(cc);
+                    if(isEnableSSL) {
+                        ClientConfig cc = new DefaultClientConfig();
+                        cc.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
+                                new HTTPSProperties(new MyHostnameVerifier(), sslContext));
+                        client = Client.create(cc);
+                    }
+                    else{
+                        client = Client.create();
+                    }
                 }
 
                 // 连接服务器验证用户名与密码

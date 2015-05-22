@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <property>
-    <!-- <entry key="resource.url">http://localhost:8080/SparkSQLServer/service/</entry> -->
-    <!-- <entry key="resource.url">http://lab.ihainan.me:8080/var/lib/tomcat7/webapps/SparkSQLServer/service/</entry> -->
-    <!-- 资源 URL 路径 -->
-    <entry key="resource.url">https://lab.ihainan.me:8444/var/lib/tomcat7/webapps/SparkSQLServer/service/</entry>
-    <!-- 每页显示的行数 -->
-    <entry key="sql.result.itemsPerPage">11</entry>
-    <!-- HTTPS 使用协议，默认 SSL -->
-    <entry key="ssl.cer.protocol">SSL</entry>
-    <!-- 客户端信任证书，目前仅支持单向认证 -->
-    <entry key="ssl.cer.clientTrustCer">/home/ihainan/tmp/keys/clientTrust.jks</entry>
-    <!-- 信任证书密码 -->
-    <entry key="ssl.cer.clientTrustCerPwd">123456</entry>
+<!-- <entry key="resource.url">http://localhost:8080/SparkSQLServer/service/</entry> -->
+<entry key="resource.url">http://lab.ihainan.me:8080/var/lib/tomcat7/webapps/SparkSQLServer/service/</entry>
+<!-- <entry key="resource.url">https://lab.ihainan.me:8444/var/lib/tomcat7/webapps/SparkSQLServer/service/</entry> -->
+<entry key="sql.result.itemsPerPage">11</entry>
+<entry key="ssl.enableSSL">false</entry>
+<entry key="ssl.cer.protocol">SSL</entry>
+<entry key="ssl.cer.clientTrustCer">/Users/ihainan/tmp/sparkSQL/clientTrust.jks</entry>
+<entry key="ssl.cer.clientTrustCerPwd">123456</entry>
 </property>
