@@ -26,7 +26,7 @@ public class GlobalVar {
         configMap.put("ssl.cer.clientTrustCerPwd", "123456");
         configMap.put("ssl.cer.clientTrustCer", "/Users/ihainan/tmp/sparkSQL/clientTrust.jks");
         configMap.put("ssl.cer.protocol", "SSL");
-        configMap.put("ssl.enable", "true");
+        configMap.put("ssl.enableSSL", "true");
 
     }
 
